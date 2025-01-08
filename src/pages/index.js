@@ -1,114 +1,183 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setFilter, setFilteredArticles, fetchNews } from '../Redux/store/newsReducer.js';
+import NewsCard from '../components/News/NewsCard';
+import Link from 'next/link';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const initialFilters = {
+  searchQuery: '',
+  author: '',
+  startDate: '',
+  endDate: ''
+};
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const Dashboard = () => {
+  const dispatch = useDispatch();
+  const filters = useSelector((state) => state.news?.filters) || initialFilters;
+  const articles = useSelector((state) => state.news?.articles) || [];
+  const filteredArticles = useSelector((state) => state.news?.filteredArticles) || [];
+  const status = useSelector((state) => state.news?.status) || 'idle';
+  const error = useSelector((state) => state.news?.error);
 
-export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  // Fetch news on component mount
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchNews());
+    }
+  }, [dispatch, status]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Filter articles when filters or articles change
+  useEffect(() => {
+    if (!articles.length) return;
+
+    const filtered = articles.filter((article) => {
+      // Search query filter
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const title = article.title?.toLowerCase() || '';
+        const description = article.description?.toLowerCase() || '';
+        
+        if (!title.includes(query) && !description.includes(query)) {
+          return false;
+        }
+      }
+
+      // Author filter
+      if (filters.author) {
+        const authorQuery = filters.author.toLowerCase();
+        const articleAuthor = article.author?.toLowerCase() || '';
+        
+        if (!articleAuthor.includes(authorQuery)) {
+          return false;
+        }
+      }
+
+      // Date range filter
+      if (filters.startDate && filters.endDate) {
+        const articleDate = new Date(article.publishedAt);
+        const start = new Date(filters.startDate);
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999); // Include the entire end date
+        
+        if (!(articleDate >= start && articleDate <= end)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    dispatch(setFilteredArticles(filtered));
+  }, [articles, filters, dispatch]);
+
+  const handleFilterChange = (key, value) => {
+    dispatch(setFilter({ key, value }));
+  };
+
+  // Loading state
+  if (status === 'loading') {
+    return (
+      <div className="bg-gray-100 min-h-screen">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <p className="ml-2 text-gray-600">Loading articles...</p>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="bg-gray-100 min-h-screen">
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-600">Error: {error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-100 min-h-screen">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">News Dashboard</h1>
+
+        {/* Search and Filters Section */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          {/* Search Query */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search articles..."
+              value={filters.searchQuery || ''}
+              onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
+
+          {/* Author and Date Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input
+              type="text"
+              placeholder="Filter by author..."
+              value={filters.author || ''}
+              onChange={(e) => handleFilterChange('author', e.target.value)}
+              className="p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={filters.startDate || ''}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                className="p-3 border border-gray-200 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              <input
+                type="date"
+                value={filters.endDate || ''}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                className="p-3 border border-gray-200 rounded-md flex-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-gray-600">
+            Showing {filteredArticles.length} of {articles.length} articles
+          </p>
+          {filteredArticles.length === 0 && articles.length > 0 && (
+            <p className="text-gray-500">No articles match your filters</p>
+          )}
+        </div>
+
+        {/* Articles Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredArticles.map((article, index) => (
+            <Link 
+              key={article.url || index} 
+              href={`/article/${encodeURIComponent(article.url)}`}
+              className="h-full"
+            >
+              <NewsCard article={article} />
+            </Link>
+            
+))}
+        </div>
+
+        {/* Empty State */}
+        {articles.length === 0 && status !== 'loading' && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No articles available</p>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Dashboard;
