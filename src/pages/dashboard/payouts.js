@@ -3,9 +3,7 @@ import { useSelector } from 'react-redux';
 
 const Payouts = () => {
   const articles = useSelector((state) => state.news?.articles) || [];
-  const [payoutRate, setPayoutRate] = useState(() => {
-    return Number(localStorage.getItem('payoutRate')) || 5;
-  });
+  const [payoutRate, setPayoutRate] = useState(5);
   const [calculatedArticles, setCalculatedArticles] = useState([]);
 
   useEffect(() => {

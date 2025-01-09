@@ -21,19 +21,19 @@ const Dashboard = () => {
   const { status, session } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/login');
-    }
-  }, [status, router]);
+  // useEffect(() => {
+  //   if (status === 'unauthenticated') {
+  //     router.push('/auth/login');
+  //   }
+  // }, [status, router]);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut({ redirect: true, callbackUrl: '/auth/login' });
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+  // const handleSignOut = async () => {
+  //   try {
+  //     await signOut({ redirect: true, callbackUrl: '/auth/login' });
+  //   } catch (error) {
+  //     console.error('Error signing out:', error);
+  //   }
+  // };
 
   useEffect(() => {
     dispatch(fetchNews());
@@ -119,17 +119,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen">
+   <div className="bg-gray-100 min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* Header with Sign Out Button */}
-        <div className="flex justify-end mb-6">
-          <button
-            onClick={handleSignOut}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
-          >
-            Sign Out
-          </button>
-        </div>
 
         {/* Navigation Tabs */}
         <div className="flex space-x-1 mb-6 bg-white p-1 rounded-lg shadow">
