@@ -4,7 +4,7 @@ import axios from 'axios';
 const initialState = {
   articles: [],
   filteredArticles: [],
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  statuss: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
   filters: {
     author: '',

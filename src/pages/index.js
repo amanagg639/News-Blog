@@ -7,14 +7,33 @@ import Analytics from './dashboard/analytics.js';
 import Payouts from './dashboard/payouts.js';
 import Settings from './dashboard/settings.js';
 import ExportPage from './dashboard/export.js';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState('news'); // news, analytics, payouts, settings, export
+  const [activeTab, setActiveTab] = useState('news');
   const filters = useSelector((state) => state.news?.filters) || {};
   const articles = useSelector((state) => state.news?.articles) || [];
   const filteredArticles = useSelector((state) => state.news?.filteredArticles) || [];
-  const status = useSelector((state) => state.news?.status);
+  const statuss = useSelector((state) => state.news?.statuss);
+
+  const { status, session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    }
+  }, [status, router]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: true, callbackUrl: '/auth/login' });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchNews());
@@ -102,6 +121,16 @@ const Dashboard = () => {
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="container mx-auto px-4 py-8">
+        {/* Header with Sign Out Button */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={handleSignOut}
+            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Sign Out
+          </button>
+        </div>
+
         {/* Navigation Tabs */}
         <div className="flex space-x-1 mb-6 bg-white p-1 rounded-lg shadow">
           {tabs.map((tab) => (
@@ -120,7 +149,7 @@ const Dashboard = () => {
         </div>
 
         {/* Status Messages */}
-        {status === 'loading' && (
+        {statuss === 'loading' && (
           <div className="flex justify-center items-center mb-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             <p className="ml-2 text-gray-600">Loading...</p>
